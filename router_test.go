@@ -9,27 +9,29 @@ import (
 
 func TestRouter(t *testing.T) {
 
-	s := New()
-
 	Convey("Get", t, func() {
+		r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
+		r.Get("/users", func(c *Context) Result { ok = true; return nil })
+		r.setHandler()
 
-		s.Get("/users", func(c *Context) Result { ok = true; return nil })
-
-		r, _ := http.NewRequest("GET", "/users", nil)
-		s.mux.ServeHTTP(&mockResponseWriter{}, r)
+		req, _ := http.NewRequest("GET", "/users", nil)
+		r.ServeHTTP(&mockResponseWriter{}, req)
 
 		So(ok, ShouldBeTrue)
+
 	})
 
 	Convey("Post", t, func() {
+		r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
+
 		ok := false
+		r.Post("/users", func(c *Context) Result { ok = true; return nil })
+		r.setHandler()
 
-		s.Post("/users", func(c *Context) Result { ok = true; return nil })
-
-		r, _ := http.NewRequest("GET", "/users", nil)
-		s.mux.ServeHTTP(&mockResponseWriter{}, r)
+		req, _ := http.NewRequest("POST", "/users", nil)
+		r.ServeHTTP(&mockResponseWriter{}, req)
 
 		So(ok, ShouldBeTrue)
 	})

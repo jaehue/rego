@@ -6,7 +6,7 @@ import (
 )
 
 type Server struct {
-	mux *http.ServeMux
+	*router
 }
 
 type Context struct {
@@ -18,12 +18,13 @@ type Result interface{}
 type HandlerFunc func(c *Context) Result
 
 func New() *Server {
-	mux := http.NewServeMux()
-	s := &Server{mux: mux}
+	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
+	s := &Server{router: r}
 	return s
 }
 
 func (s *Server) Run(addr string) {
+	s.setHandler()
 	if err := http.ListenAndServe(addr, s); err != nil {
 		panic(err)
 	}
