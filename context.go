@@ -5,10 +5,10 @@ import (
 	"sync"
 )
 
-var Ctx *context
+var ctx *context
 
 func init() {
-	Ctx = &context{data: make(map[*http.Request]map[string]interface{})}
+	ctx = &context{data: make(map[*http.Request]map[string]interface{})}
 }
 
 type context struct {

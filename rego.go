@@ -26,6 +26,7 @@ func (c *Context) RenderXml(v interface{}) Result {
 func New() *Server {
 	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
 	s := &Server{router: r}
+	s.middlewares = []Middleware{logHandler, bodyParserHandler}
 	return s
 }
 
