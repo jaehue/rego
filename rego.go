@@ -38,17 +38,14 @@ func (s *Server) Use(middlewares ...Middleware) {
 
 func (s *Server) Run(addr string) {
 	s.router.setHandler()
-	if err := http.ListenAndServe(addr, s); err != nil {
-		panic(err)
-	}
-}
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	final := s.router.ServeHTTP
+	var final http.Handler = s.router
 
 	for i := len(s.middlewares) - 1; i >= 0; i-- {
 		final = s.middlewares[i](final)
 	}
 
-	final(w, r)
+	if err := http.ListenAndServe(addr, final); err != nil {
+		panic(err)
+	}
 }

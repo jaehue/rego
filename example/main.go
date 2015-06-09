@@ -31,10 +31,10 @@ func Users(c *rego.Context) rego.Result {
 	return c.RenderJson(users)
 }
 
-func logHandler(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func logHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := time.Now()
-		next(w, r)
+		next.ServeHTTP(w, r)
 		log.Printf("[%s] %q %v\n", r.Method, r.URL.String(), time.Now().Sub(t))
-	}
+	})
 }
