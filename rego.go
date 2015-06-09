@@ -18,6 +18,14 @@ type Result interface{}
 
 type HandlerFunc func(c *Context) Result
 
+func (c *Context) RenderJson(v interface{}) Result {
+	return jsonResult{v}
+}
+
+func (c *Context) RenderXml(v interface{}) Result {
+	return xmlResult{v}
+}
+
 func New() *Server {
 	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
 	s := &Server{router: r}

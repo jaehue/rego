@@ -29,6 +29,10 @@ func (d *dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	c := &Context{}
 	result := fn(c)
+	if renderer, ok := result.(renderer); ok {
+		renderer.render(w, r)
+		return
+	}
 	fmt.Fprint(w, result)
 }
 

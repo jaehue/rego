@@ -8,10 +8,16 @@ import (
 	"github.com/jaehue/rego"
 )
 
+type User struct {
+	Id    int64  `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 func main() {
 	s := rego.New()
 	s.Get("/", Index)
-	s.Get("/hello", Hello)
+	s.Get("/users", Users)
 	s.Use(logHandler)
 	s.Run(":8082")
 }
@@ -20,8 +26,9 @@ func Index(c *rego.Context) rego.Result {
 	return "Welcome rego"
 }
 
-func Hello(c *rego.Context) rego.Result {
-	return "Hello rego"
+func Users(c *rego.Context) rego.Result {
+	users := []User{User{1, "John", "john@mail.com"}, User{2, "Bob", "bob@mail.com"}, User{3, "Mark", "mark@mail.com"}}
+	return c.RenderJson(users)
 }
 
 func logHandler(next http.HandlerFunc) http.HandlerFunc {
