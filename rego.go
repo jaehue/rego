@@ -23,6 +23,10 @@ func (c *Context) RenderXml(v interface{}) Result {
 	return xmlResult{v}
 }
 
+func (c *Context) RenderErr(code int, err error) Result {
+	return errResult{code, err}
+}
+
 func New() *Server {
 	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
 	s := &Server{router: r}
