@@ -1,9 +1,6 @@
 package rego
 
-import (
-	"net/http"
-	"net/url"
-)
+import "net/http"
 
 type Server struct {
 	*router
@@ -11,7 +8,7 @@ type Server struct {
 }
 
 type Context struct {
-	Params url.Values
+	Params map[string]interface{}
 }
 
 type Result interface{}
