@@ -7,6 +7,7 @@ import (
 
 type Server struct {
 	*router
+	middlewares []Middleware
 }
 
 type Context struct {
@@ -23,9 +24,23 @@ func New() *Server {
 	return s
 }
 
+func (s *Server) Use(middlewares ...Middleware) {
+	s.middlewares = append(s.middlewares, middlewares...)
+}
+
 func (s *Server) Run(addr string) {
-	s.setHandler()
+	s.router.setHandler()
 	if err := http.ListenAndServe(addr, s); err != nil {
 		panic(err)
 	}
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	final := s.router.ServeHTTP
+
+	for i := len(s.middlewares) - 1; i >= 0; i-- {
+		final = s.middlewares[i](final)
+	}
+
+	final(w, r)
 }
