@@ -1,6 +1,11 @@
 package rego
 
-import "net/http"
+import (
+	"html/template"
+	"net/http"
+	"path/filepath"
+	"sync"
+)
 
 type Server struct {
 	*router
@@ -14,6 +19,24 @@ type Context struct {
 type Result interface{}
 
 type HandlerFunc func(c *Context) Result
+
+type templateLoader struct {
+	once      sync.Once
+	templates map[string]*template.Template
+}
+
+var loader = templateLoader{templates: make(map[string]*template.Template)}
+
+func (c *Context) RenderTemplate(path string) Result {
+	t, ok := loader.templates[path]
+	if !ok {
+		loader.once.Do(func() {
+			t = template.Must(template.ParseFiles(filepath.Join(".", path)))
+		})
+		loader.templates[path] = t
+	}
+	return templateResult{t}
+}
 
 func (c *Context) RenderJson(v interface{}) Result {
 	return jsonResult{v}

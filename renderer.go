@@ -3,6 +3,7 @@ package rego
 import (
 	"encoding/json"
 	"encoding/xml"
+	"html/template"
 	"net/http"
 )
 
@@ -21,6 +22,14 @@ type xmlResult struct {
 type errResult struct {
 	code int
 	err  error
+}
+
+type templateResult struct {
+	*template.Template
+}
+
+func (r templateResult) render(w http.ResponseWriter, req *http.Request) {
+	r.Execute(w, nil)
 }
 
 func (r jsonResult) render(w http.ResponseWriter, req *http.Request) {
