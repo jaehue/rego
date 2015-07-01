@@ -10,7 +10,8 @@ type router struct {
 
 	// key: URL Pattern
 	// value: URL Pattern별로 처리할 dispatcher
-	dispatchers map[string]*dispatcher
+	dispatchers       map[string]*dispatcher
+	staticFileHandler map[string]http.HandlerFunc
 }
 
 type dispatcher struct {
@@ -50,6 +51,16 @@ func (r *router) Post(path string, h HandlerFunc) {
 	r.register("POST", path, h)
 }
 
+func (r *router) Static(path string) {
+	if r.staticFileHandler == nil {
+		r.staticFileHandler = make(map[string]http.HandlerFunc)
+	}
+
+	r.staticFileHandler[path] = func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, req.URL.Path[1:])
+	}
+}
+
 func (r *router) register(method, pattern string, h HandlerFunc) {
 	d, ok := r.dispatchers[pattern]
 	if !ok {
@@ -62,6 +73,9 @@ func (r *router) register(method, pattern string, h HandlerFunc) {
 func (r *router) setHandler() {
 	for p, d := range r.dispatchers {
 		r.mux.Handle(p, d)
+	}
+	for p, h := range r.staticFileHandler {
+		r.mux.HandleFunc(p, h)
 	}
 }
 

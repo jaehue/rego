@@ -17,6 +17,9 @@ func main() {
 	s.Get("/", Index)
 	s.Get("/users", Users)
 	s.Post("/users", PostUser)
+
+	s.Static("/public/")
+
 	s.Run(":8082")
 }
 
