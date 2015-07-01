@@ -14,12 +14,13 @@ type Server struct {
 
 type Context struct {
 	Params map[string]interface{}
-	w      http.ResponseWriter
-	r      *http.Request
+
+	ResponseWriter http.ResponseWriter
+	Request        *http.Request
 }
 
 func (c Context) SetCookie(k, v string) {
-	http.SetCookie(c.w, &http.Cookie{
+	http.SetCookie(c.ResponseWriter, &http.Cookie{
 		Name:  k,
 		Value: v,
 		Path:  "/",
@@ -49,8 +50,8 @@ func (c *Context) RenderTemplate(path string) Result {
 }
 
 func (c *Context) Redirect(url string) Result {
-	c.w.Header().Set("Location", url)
-	c.w.WriteHeader(http.StatusTemporaryRedirect)
+	c.ResponseWriter.Header().Set("Location", url)
+	c.ResponseWriter.WriteHeader(http.StatusTemporaryRedirect)
 	return nil
 }
 
@@ -69,7 +70,7 @@ func (c *Context) RenderErr(code int, err error) Result {
 func New() *Server {
 	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
 	s := &Server{router: r}
-	s.middlewares = []Middleware{logHandler, AuthHandler, parseFormHandler, parseJsonBodyHandler}
+	s.middlewares = []Middleware{logHandler, parseFormHandler, parseJsonBodyHandler}
 	return s
 }
 

@@ -28,7 +28,7 @@ func (d *dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := &Context{Params: make(map[string]interface{}), w: w, r: r}
+	c := &Context{Params: make(map[string]interface{}), ResponseWriter: w, Request: r}
 	if params, ok := ctx.GetAll(r); ok {
 		for k, v := range params {
 			c.Params[k] = v

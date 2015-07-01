@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -38,33 +37,11 @@ func parseFormHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		for k, v := range r.PostForm {
-			ctx.Set(r, k, v)
+			if len(v) > 0 {
+				ctx.Set(r, k, v[0])
+			}
 		}
 		next.ServeHTTP(w, r)
 
-	})
-}
-
-func AuthHandler(next http.Handler) http.Handler {
-	ignore := []string{"/login"}
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		for _, s := range ignore {
-			if strings.HasPrefix(r.URL.Path, s) {
-				next.ServeHTTP(w, r)
-				return
-			}
-		}
-
-		if _, err := r.Cookie("auth"); err == http.ErrNoCookie {
-			// not authenticated
-			w.Header().Set("Location", "/login")
-			w.WriteHeader(http.StatusTemporaryRedirect)
-		} else if err != nil {
-			// some other error
-			panic(err.Error())
-		} else {
-			// success - call the next handler
-			next.ServeHTTP(w, r)
-		}
 	})
 }
