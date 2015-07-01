@@ -14,6 +14,16 @@ type Server struct {
 
 type Context struct {
 	Params map[string]interface{}
+	w      http.ResponseWriter
+	r      *http.Request
+}
+
+func (c Context) SetCookie(k, v string) {
+	http.SetCookie(c.w, &http.Cookie{
+		Name:  k,
+		Value: v,
+		Path:  "/",
+	})
 }
 
 type Result interface{}
@@ -36,6 +46,12 @@ func (c *Context) RenderTemplate(path string) Result {
 		loader.templates[path] = t
 	}
 	return templateResult{t}
+}
+
+func (c *Context) Redirect(url string) Result {
+	c.w.Header().Set("Location", url)
+	c.w.WriteHeader(http.StatusTemporaryRedirect)
+	return nil
 }
 
 func (c *Context) RenderJson(v interface{}) Result {
