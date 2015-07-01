@@ -19,6 +19,13 @@ func main() {
 	s.Post("/users", PostUser)
 
 	s.Static("/public/")
+	s.Get("/login", func(c *rego.Context) rego.Result {
+		return c.RenderTemplate("/public/login.html")
+	})
+	s.Post("/login", func(c *rego.Context) rego.Result {
+		c.SetCookie("auth", "true")
+		return c.Redirect("/public/index.html")
+	})
 
 	s.Run(":8082")
 }
