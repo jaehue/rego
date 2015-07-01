@@ -53,7 +53,7 @@ func (c *Context) RenderErr(code int, err error) Result {
 func New() *Server {
 	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
 	s := &Server{router: r}
-	s.middlewares = []Middleware{logHandler, AuthHandler, bodyParserHandler}
+	s.middlewares = []Middleware{logHandler, AuthHandler, parseFormHandler, parseJsonBodyHandler}
 	return s
 }
 

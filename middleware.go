@@ -22,7 +22,7 @@ func logHandler(next http.Handler) http.Handler {
 	})
 }
 
-func bodyParserHandler(next http.Handler) http.Handler {
+func parseJsonBodyHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var m map[string]interface{}
 		if json.NewDecoder(r.Body).Decode(&m); len(m) > 0 {
@@ -31,6 +31,17 @@ func bodyParserHandler(next http.Handler) http.Handler {
 			}
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+func parseFormHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		for k, v := range r.PostForm {
+			ctx.Set(r, k, v)
+		}
+		next.ServeHTTP(w, r)
+
 	})
 }
 
