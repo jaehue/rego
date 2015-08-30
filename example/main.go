@@ -21,15 +21,15 @@ type User struct {
 
 func main() {
 	s := rego.New()
-	s.Get("/", Index)
-	s.Get("/users", Users)
-	s.Post("/users", PostUser)
+	s.HandleFunc("GET", "/", Index)
+	s.HandleFunc("GET", "/users", Users)
+	s.HandleFunc("POST", "/users", PostUser)
 
 	s.Static("/public/")
-	s.Get("/login", func(c *rego.Context) rego.Result {
+	s.HandleFunc("GET", "/login", func(c *rego.Context) rego.Result {
 		return c.RenderTemplate("/public/login.html")
 	})
-	s.Post("/login", func(c *rego.Context) rego.Result {
+	s.HandleFunc("POST", "/login", func(c *rego.Context) rego.Result {
 		fmt.Println(c.Params["username"])
 		fmt.Println(c.Params["password"])
 		if c.Params["username"] == "test" && c.Params["password"] == "password" {

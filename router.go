@@ -18,14 +18,6 @@ type dispatcher struct {
 	handles map[string]HandlerFunc
 }
 
-func (r *router) Get(path string, h HandlerFunc) {
-	r.HandleFunc("GET", path, h)
-}
-
-func (r *router) Post(path string, h HandlerFunc) {
-	r.HandleFunc("POST", path, h)
-}
-
 func (r *router) Static(path string) {
 	if r.staticFileHandler == nil {
 		r.staticFileHandler = make(map[string]http.HandlerFunc)
