@@ -68,7 +68,7 @@ func (c *Context) RenderErr(code int, err error) Result {
 }
 
 func New() *Server {
-	r := &router{mux: http.NewServeMux(), dispatchers: make(map[string]*dispatcher)}
+	r := &router{dispatchers: make(map[string]*dispatcher)}
 	s := &Server{router: r}
 	s.middlewares = []Middleware{logHandler, parseFormHandler, parseJsonBodyHandler}
 	return s
@@ -79,8 +79,6 @@ func (s *Server) Use(middlewares ...Middleware) {
 }
 
 func (s *Server) Run(addr string) {
-	s.router.setHandler()
-
 	var final http.Handler = s.router
 
 	for i := len(s.middlewares) - 1; i >= 0; i-- {

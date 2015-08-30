@@ -5,9 +5,7 @@ import (
 	"net/http"
 )
 
-type router struct {
-	mux *http.ServeMux
-
+type router struct {	
 	// key: URL Pattern
 	// value: URL Pattern별로 처리할 dispatcher
 	dispatchers       map[string]*dispatcher
@@ -70,15 +68,10 @@ func (r *router) register(method, pattern string, h HandlerFunc) {
 	d.handles[method] = h
 }
 
-func (r *router) setHandler() {
-	for p, d := range r.dispatchers {
-		r.mux.Handle(p, d)
-	}
-	for p, h := range r.staticFileHandler {
-		r.mux.HandleFunc(p, h)
-	}
-}
-
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.mux.ServeHTTP(w, req)
+	for pattern,dispatcher := range r.dispatchers{
+		if req.URL.Path == pattern {
+			dispatcher.ServeHTTP(w, req)
+		}
+	}
 }
