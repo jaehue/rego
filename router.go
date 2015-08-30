@@ -3,9 +3,11 @@ package rego
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type router struct {
+	mux *http.ServeMux
 	// key: HTTP Method (GET|POST|PUT|PATCH|DELETE)
 	// value: HTTP Method별로 처리할 dispatcher
 	dispatchers       map[string]*dispatcher
@@ -39,6 +41,12 @@ func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 
 // 요청 Method에 해당하는 HandlerFunc를 호출
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	for path, handler := range r.staticFileHandler {
+		if strings.HasPrefix(req.URL.Path, path) {
+			handler(w, req)
+		}
+
+	}
 	dispatcher, ok := r.dispatchers[req.Method]
 	if !ok {
 		http.NotFound(w, req)
