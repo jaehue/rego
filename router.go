@@ -44,16 +44,22 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	for path, handler := range r.staticFileHandler {
 		if strings.HasPrefix(req.URL.Path, path) {
 			handler(w, req)
+			return
 		}
 
 	}
+
 	dispatcher, ok := r.dispatchers[req.Method]
-	if !ok {
-		http.NotFound(w, req)
+	if ok {
+		dispatcher.dispatch(w, req)
 		return
 	}
 
-	fn, ok := dispatcher.handles[req.URL.Path]
+	http.NotFound(w, req)
+}
+
+func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) {
+	fn, ok := d.handles[req.URL.Path]
 	if !ok {
 		http.NotFound(w, req)
 		return
