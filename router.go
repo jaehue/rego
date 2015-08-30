@@ -41,6 +41,11 @@ func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 
 // 요청 Method에 해당하는 HandlerFunc를 호출
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	dispatcher, ok := r.dispatchers[req.Method]
+	if ok && dispatcher.dispatch(w, req){
+		return
+	}
+
 	for path, handler := range r.staticFileHandler {
 		if strings.HasPrefix(req.URL.Path, path) {
 			handler(w, req)
@@ -49,20 +54,13 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	}
 
-	dispatcher, ok := r.dispatchers[req.Method]
-	if ok {
-		dispatcher.dispatch(w, req)
-		return
-	}
-
 	http.NotFound(w, req)
 }
 
-func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) {
+func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
 	fn, ok := d.handles[req.URL.Path]
 	if !ok {
-		http.NotFound(w, req)
-		return
+		return false
 	}
 
 	c := &Context{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
@@ -75,7 +73,8 @@ func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) {
 	result := fn(c)
 	if renderer, ok := result.(renderer); ok {
 		renderer.render(w, req)
-		return
+		return false
 	}
 	fmt.Fprint(w, result)
+	return true
 }
