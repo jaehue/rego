@@ -26,21 +26,21 @@ func main() {
 	s.HandleFunc("POST", "/users", PostUser)
 
 	s.Static("/public/")
-	s.HandleFunc("GET", "/login", func(c *rego.Context) rego.Result {
-		return c.RenderTemplate("/public/login.html")
+	s.HandleFunc("GET", "/login", func(a *rego.App) rego.Result {
+		return a.RenderTemplate("/public/login.html")
 	})
-	s.HandleFunc("POST", "/login", func(c *rego.Context) rego.Result {
-		fmt.Println(c.Params["username"])
-		fmt.Println(c.Params["password"])
-		if c.Params["username"] == "test" && c.Params["password"] == "password" {
-			http.SetCookie(c.ResponseWriter, &http.Cookie{
+	s.HandleFunc("POST", "/login", func(a *rego.App) rego.Result {
+		fmt.Println(a.Params["username"])
+		fmt.Println(a.Params["password"])
+		if a.Params["username"] == "test" && a.Params["password"] == "password" {
+			http.SetCookie(a.ResponseWriter, &http.Cookie{
 				Name:  "X_AUTH",
 				Value: Sign("verified"),
 				Path:  "/",
 			})
-			return c.Redirect("/public/index.html")
+			return a.Redirect("/public/index.html")
 		}
-		return c.RenderTemplate("/public/login.html")
+		return a.RenderTemplate("/public/login.html")
 
 	})
 
@@ -49,20 +49,20 @@ func main() {
 	s.Run(":8082")
 }
 
-func Index(c *rego.Context) rego.Result {
+func Index(a *rego.App) rego.Result {
 	return "Welcome rego"
 }
 
-func PostUser(c *rego.Context) rego.Result {
-	if u, ok := c.Params["user"]; ok {
+func PostUser(a *rego.App) rego.Result {
+	if u, ok := a.Params["user"]; ok {
 		log.Println(u)
 	}
 	return nil
 }
 
-func Users(c *rego.Context) rego.Result {
+func Users(a *rego.App) rego.Result {
 	users := []User{User{1, "John", "john@mail.com"}, User{2, "Bob", "bob@mail.com"}, User{3, "Mark", "mark@mail.com"}}
-	return c.RenderJson(users)
+	return a.RenderJson(users)
 }
 
 func AuthHandler(next http.Handler) http.Handler {

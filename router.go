@@ -63,14 +63,14 @@ func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
 		return false
 	}
 
-	c := &Context{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
+	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
 	if params, ok := ctx.GetAll(req); ok {
 		for k, v := range params {
-			c.Params[k] = v
+			a.Params[k] = v
 		}
 	}
 
-	result := fn(c)
+	result := fn(a)
 	if renderer, ok := result.(renderer); ok {
 		renderer.render(w, req)
 		return false

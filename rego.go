@@ -12,15 +12,15 @@ type Server struct {
 	middlewares []Middleware
 }
 
-type Context struct {
+type App struct {
 	Params map[string]interface{}
 
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
 }
 
-func (c Context) SetCookie(k, v string) {
-	http.SetCookie(c.ResponseWriter, &http.Cookie{
+func (a App) SetCookie(k, v string) {
+	http.SetCookie(a.ResponseWriter, &http.Cookie{
 		Name:  k,
 		Value: v,
 		Path:  "/",
@@ -29,7 +29,7 @@ func (c Context) SetCookie(k, v string) {
 
 type Result interface{}
 
-type HandlerFunc func(c *Context) Result
+type HandlerFunc func(*App) Result
 
 type templateLoader struct {
 	once      sync.Once
@@ -38,7 +38,7 @@ type templateLoader struct {
 
 var loader = templateLoader{templates: make(map[string]*template.Template)}
 
-func (c *Context) RenderTemplate(path string) Result {
+func (a *App) RenderTemplate(path string) Result {
 	t, ok := loader.templates[path]
 	if !ok {
 		loader.once.Do(func() {
@@ -49,21 +49,21 @@ func (c *Context) RenderTemplate(path string) Result {
 	return templateResult{t}
 }
 
-func (c *Context) Redirect(url string) Result {
-	c.ResponseWriter.Header().Set("Location", url)
-	c.ResponseWriter.WriteHeader(http.StatusTemporaryRedirect)
+func (a *App) Redirect(url string) Result {
+	a.ResponseWriter.Header().Set("Location", url)
+	a.ResponseWriter.WriteHeader(http.StatusTemporaryRedirect)
 	return nil
 }
 
-func (c *Context) RenderJson(v interface{}) Result {
+func (a *App) RenderJson(v interface{}) Result {
 	return jsonResult{v}
 }
 
-func (c *Context) RenderXml(v interface{}) Result {
+func (a *App) RenderXml(v interface{}) Result {
 	return xmlResult{v}
 }
 
-func (c *Context) RenderErr(code int, err error) Result {
+func (a *App) RenderErr(code int, err error) Result {
 	return errResult{code, err}
 }
 
