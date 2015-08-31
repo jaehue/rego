@@ -19,6 +19,22 @@ type App struct {
 	Request        *http.Request
 }
 
+func NewApp(w http.ResponseWriter, req *http.Request, urlParams map[string]string) *App {
+	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
+	if params, ok := ctx.GetAll(req); ok {
+		for k, v := range params {
+			a.Params[k] = v
+		}
+	}
+	if urlParams != nil {
+		for k, v := range urlParams {
+			a.Params[k] = v
+		}
+	}
+
+	return a
+}
+
 func (a App) SetCookie(k, v string) {
 	http.SetCookie(a.ResponseWriter, &http.Cookie{
 		Name:  k,

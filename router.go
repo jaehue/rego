@@ -42,7 +42,7 @@ func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 // 요청 Method에 해당하는 HandlerFunc를 호출
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	dispatcher, ok := r.dispatchers[req.Method]
-	if ok && dispatcher.dispatch(w, req){
+	if ok && dispatcher.dispatch(w, req) {
 		return
 	}
 
@@ -58,17 +58,12 @@ func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
-	fn, ok := d.handles[req.URL.Path]
-	if !ok {
+	fn, params, found := d.lookup(req.URL.Path)
+	if !found {
 		return false
 	}
 
-	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
-	if params, ok := ctx.GetAll(req); ok {
-		for k, v := range params {
-			a.Params[k] = v
-		}
-	}
+	a := NewApp(w, req, params)
 
 	result := fn(a)
 	if renderer, ok := result.(renderer); ok {
@@ -77,4 +72,42 @@ func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
 	}
 	fmt.Fprint(w, result)
 	return true
+}
+
+func (d *dispatcher) lookup(path string) (HandlerFunc, map[string]string, bool) {
+	for pattern, handler := range d.handles {
+		if matched, params := match(pattern, path); matched {
+			return handler, params, true
+		}
+	}
+	return nil, nil, false
+}
+
+func match(pattern, path string) (matched bool, params map[string]string) {
+	if pattern == path {
+		return true, map[string]string{}
+	}
+	patterns := strings.Split(pattern, "/")
+	paths := strings.Split(path, "/")
+
+	if len(patterns) != len(paths) {
+		return
+	}
+
+	params = make(map[string]string)
+
+	for i := 0; i < len(patterns); i++ {
+		if patterns[i] == paths[i] {
+			matched = true
+			continue
+		}
+		if patterns[i][0] == ':' {
+			params[patterns[i][1:]] = paths[i]
+			matched = true
+			continue
+		}
+		matched = false
+		break
+	}
+	return
 }
