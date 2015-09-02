@@ -84,7 +84,10 @@ func (a *App) RenderErr(code int, err error) Result {
 }
 
 func New() *Server {
-	r := &router{dispatchers: make(map[string]*dispatcher)}
+	r := &router{
+		dispatchers: make(map[string]*dispatcher),
+		staticFileHandler: make(map[string]http.HandlerFunc),
+	}
 	s := &Server{router: r}
 	s.middlewares = []Middleware{logHandler, parseFormHandler, parseJsonBodyHandler}
 	return s

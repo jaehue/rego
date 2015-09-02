@@ -7,7 +7,7 @@ import (
 )
 
 type router struct {
-	mux *http.ServeMux
+	// mux *http.ServeMux
 	// key: HTTP Method (GET|POST|PUT|PATCH|DELETE)
 	// value: HTTP Method별로 처리할 dispatcher
 	dispatchers       map[string]*dispatcher
@@ -21,10 +21,6 @@ type dispatcher struct {
 }
 
 func (r *router) Static(path string) {
-	if r.staticFileHandler == nil {
-		r.staticFileHandler = make(map[string]http.HandlerFunc)
-	}
-
 	r.staticFileHandler[path] = func(w http.ResponseWriter, req *http.Request) {
 		http.ServeFile(w, req, req.URL.Path[1:])
 	}
