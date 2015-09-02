@@ -64,7 +64,7 @@ func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
 	result := fn(a)
 	if renderer, ok := result.(renderer); ok {
 		renderer.render(w, req)
-		return false
+		return true
 	}
 	fmt.Fprint(w, result)
 	return true
@@ -89,10 +89,11 @@ func match(pattern, path string) (matched bool, params map[string]string) {
 	if len(patterns) != len(paths) {
 		return
 	}
-
 	params = make(map[string]string)
-
 	for i := 0; i < len(patterns); i++ {
+		if len(patterns[i]) == 0 {
+			continue
+		}
 		if patterns[i] == paths[i] {
 			matched = true
 			continue
