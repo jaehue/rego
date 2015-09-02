@@ -23,6 +23,9 @@ func main() {
 	s := rego.New()
 	s.HandleFunc("GET", "/", Index)
 	s.HandleFunc("GET", "/users", Users)
+	s.HandleFunc("GET", "/users/:id", func(a *rego.App) rego.Result {
+		return a.Params["id"]
+	})
 	s.HandleFunc("POST", "/users", PostUser)
 
 	s.Static("/public/")
