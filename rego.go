@@ -85,7 +85,7 @@ func (a *App) RenderErr(code int, err error) Result {
 
 func New() *Server {
 	r := &router{
-		dispatchers: make(map[string]*dispatcher),
+		dispatchers:       make(map[string]*dispatcher),
 		staticFileHandler: make(map[string]http.HandlerFunc),
 	}
 	s := &Server{router: r}
