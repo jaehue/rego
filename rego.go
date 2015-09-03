@@ -89,7 +89,7 @@ func New() *Server {
 		staticFileHandler: make(map[string]http.HandlerFunc),
 	}
 	s := &Server{router: r}
-	s.middlewares = []Middleware{logHandler, parseFormHandler, parseJsonBodyHandler}
+	s.middlewares = []Middleware{logHandler, recoverHandler, parseFormHandler, parseJsonBodyHandler}
 	return s
 }
 
