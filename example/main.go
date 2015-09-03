@@ -28,7 +28,6 @@ func main() {
 	})
 	s.HandleFunc("POST", "/users", PostUser)
 
-	s.Static("/public/")
 	s.HandleFunc("GET", "/login", func(a *rego.App) rego.Result {
 		return a.RenderTemplate("/public/login.html")
 	})

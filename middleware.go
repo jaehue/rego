@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -30,6 +32,58 @@ func recoverHandler(next http.Handler) http.Handler {
 			}
 		}()
 		next.ServeHTTP(w, r)
+	})
+}
+
+func staticHandler(next http.Handler) http.Handler {
+	var (
+		dir       = http.Dir(".")
+		indexFile = "index.html"
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" && r.Method != "HEAD" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		file := r.URL.Path
+		f, err := dir.Open(file)
+		if err != nil {
+			// discard the error?
+			next.ServeHTTP(w, r)
+			return
+		}
+		defer f.Close()
+
+		fi, err := f.Stat()
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// try to serve index file
+		if fi.IsDir() {
+			// redirect if missing trailing slash
+			if !strings.HasSuffix(r.URL.Path, "/") {
+				http.Redirect(w, r, r.URL.Path+"/", http.StatusFound)
+				return
+			}
+
+			file = path.Join(file, indexFile)
+			f, err = dir.Open(file)
+			if err != nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+			defer f.Close()
+
+			fi, err = f.Stat()
+			if err != nil || fi.IsDir() {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		http.ServeContent(w, r, file, fi.ModTime(), f)
 	})
 }
 
