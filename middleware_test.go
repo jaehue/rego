@@ -9,10 +9,7 @@ import (
 
 func TestRecover(t *testing.T) {
 	Convey("Get", t, func() {
-		r := &router{
-			dispatchers:       make(map[string]*dispatcher),
-			staticFileHandler: make(map[string]http.HandlerFunc),
-		}
+		r := &router{dispatchers: make(map[string]*dispatcher)}
 		r.HandleFunc("GET", "/", func(a *App) Result { panic("panic!") })
 
 		handler := recoverHandler(r)
