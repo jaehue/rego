@@ -1,7 +1,6 @@
 package rego
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -46,12 +45,7 @@ func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
 
 	a := NewApp(w, req, params)
 
-	result := fn(a)
-	if renderer, ok := result.(renderer); ok {
-		renderer.render(w, req)
-		return true
-	}
-	fmt.Fprint(w, result)
+	fn(a)
 	return true
 }
 

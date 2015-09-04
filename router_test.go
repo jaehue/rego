@@ -13,7 +13,7 @@ func TestRouter(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
-		r.HandleFunc("GET", "/users", func(a *App) Result { ok = true; return nil })
+		r.HandleFunc("GET", "/users", func(a *App) { ok = true })
 
 		req, _ := http.NewRequest("GET", "/users", nil)
 		r.ServeHTTP(&mockResponseWriter{}, req)
@@ -26,7 +26,7 @@ func TestRouter(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
-		r.HandleFunc("POST", "/users", func(a *App) Result { ok = true; return nil })
+		r.HandleFunc("POST", "/users", func(a *App) { ok = true })
 
 		req, _ := http.NewRequest("POST", "/users", nil)
 		r.ServeHTTP(&mockResponseWriter{}, req)
@@ -38,11 +38,10 @@ func TestRouter(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
-		r.HandleFunc("GET", "/users/:id/addresses", func(a *App) Result {
+		r.HandleFunc("GET", "/users/:id/addresses", func(a *App) {
 			if a.Params["id"] == "1" {
 				ok = true
 			}
-			return nil
 		})
 
 		Convey("found", func() {

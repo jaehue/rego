@@ -1,6 +1,8 @@
 package rego
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -43,9 +45,7 @@ func (a App) SetCookie(k, v string) {
 	})
 }
 
-type Result interface{}
-
-type HandlerFunc func(*App) Result
+type HandlerFunc func(*App)
 
 type templateLoader struct {
 	once      sync.Once
@@ -54,7 +54,7 @@ type templateLoader struct {
 
 var loader = templateLoader{templates: make(map[string]*template.Template)}
 
-func (a *App) RenderTemplate(path string) Result {
+func (a *App) RenderTemplate(path string) {
 	t, ok := loader.templates[path]
 	if !ok {
 		loader.once.Do(func() {
@@ -62,25 +62,40 @@ func (a *App) RenderTemplate(path string) Result {
 		})
 		loader.templates[path] = t
 	}
-	return templateResult{t}
+	t.Execute(a.ResponseWriter, nil)
 }
 
-func (a *App) Redirect(url string) Result {
-	a.ResponseWriter.Header().Set("Location", url)
-	a.ResponseWriter.WriteHeader(http.StatusTemporaryRedirect)
-	return nil
+func (a *App) Redirect(url string) {
+	http.Redirect(a.ResponseWriter, a.Request, url, http.StatusMovedPermanently)
 }
 
-func (a *App) RenderJson(v interface{}) Result {
-	return jsonResult{v}
+func (a *App) RenderJson(v interface{}) {
+	a.ResponseWriter.WriteHeader(http.StatusOK)
+	a.ResponseWriter.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	if err := json.NewEncoder(a.ResponseWriter).Encode(v); err != nil {
+		a.RenderErr(http.StatusInternalServerError, err)
+	}
 }
 
-func (a *App) RenderXml(v interface{}) Result {
-	return xmlResult{v}
+func (a *App) RenderXml(v interface{}) {
+	a.ResponseWriter.WriteHeader(http.StatusOK)
+	a.ResponseWriter.Header().Set("Content-Type", "application/xml; charset=utf-8")
+
+	if err := xml.NewEncoder(a.ResponseWriter).Encode(v); err != nil {
+		a.RenderErr(http.StatusInternalServerError, err)
+	}
 }
 
-func (a *App) RenderErr(code int, err error) Result {
-	return errResult{code, err}
+func (a *App) RenderErr(code int, err error) {
+	if err != nil {
+		if code > 0 {
+			http.Error(a.ResponseWriter, http.StatusText(code), code)
+		} else {
+			defaultErr := http.StatusInternalServerError
+			http.Error(a.ResponseWriter, http.StatusText(defaultErr), defaultErr)
+		}
+	}
 }
 
 func New() *Server {

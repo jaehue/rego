@@ -10,7 +10,7 @@ import (
 func TestRecover(t *testing.T) {
 	Convey("Get", t, func() {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
-		r.HandleFunc("GET", "/", func(a *App) Result { panic("panic!") })
+		r.HandleFunc("GET", "/", func(a *App) { panic("panic!") })
 
 		handler := recoverHandler(r)
 		req, _ := http.NewRequest("GET", "/", nil)

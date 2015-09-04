@@ -23,15 +23,15 @@ func main() {
 	s := rego.New()
 	s.HandleFunc("GET", "/", Index)
 	s.HandleFunc("GET", "/users", Users)
-	s.HandleFunc("GET", "/users/:id", func(a *rego.App) rego.Result {
-		return a.Params["id"]
+	s.HandleFunc("GET", "/users/:id", func(a *rego.App) {
+		a.RenderJson(a.Params)
 	})
 	s.HandleFunc("POST", "/users", PostUser)
 
-	s.HandleFunc("GET", "/login", func(a *rego.App) rego.Result {
-		return a.RenderTemplate("/public/login.html")
+	s.HandleFunc("GET", "/login", func(a *rego.App) {
+		a.RenderTemplate("/public/login.html")
 	})
-	s.HandleFunc("POST", "/login", func(a *rego.App) rego.Result {
+	s.HandleFunc("POST", "/login", func(a *rego.App) {
 		fmt.Println(a.Params["username"])
 		fmt.Println(a.Params["password"])
 		if a.Params["username"] == "test" && a.Params["password"] == "password" {
@@ -40,9 +40,9 @@ func main() {
 				Value: Sign("verified"),
 				Path:  "/",
 			})
-			return a.Redirect("/public/index.html")
+			a.Redirect("/public/index.html")
 		}
-		return a.RenderTemplate("/public/login.html")
+		a.RenderTemplate("/public/login.html")
 
 	})
 
@@ -51,20 +51,19 @@ func main() {
 	s.Run(":8082")
 }
 
-func Index(a *rego.App) rego.Result {
-	return "Welcome rego"
+func Index(a *rego.App) {
+	a.RenderJson("Welcome rego")
 }
 
-func PostUser(a *rego.App) rego.Result {
+func PostUser(a *rego.App) {
 	if u, ok := a.Params["user"]; ok {
 		log.Println(u)
 	}
-	return nil
 }
 
-func Users(a *rego.App) rego.Result {
+func Users(a *rego.App) {
 	users := []User{User{1, "John", "john@mail.com"}, User{2, "Bob", "bob@mail.com"}, User{3, "Mark", "mark@mail.com"}}
-	return a.RenderJson(users)
+	a.RenderJson(users)
 }
 
 func AuthHandler(next http.Handler) http.Handler {
