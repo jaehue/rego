@@ -16,22 +16,22 @@ type middlewareChain struct {
 type Middleware func(next HandlerFunc) HandlerFunc
 
 func logHandler(next HandlerFunc) HandlerFunc {
-	return func(a *App) {
+	return func(c *Context) {
 		t := time.Now()
-		next(a)
-		log.Printf("[%s] %q %v\n", a.Request.Method, a.Request.URL.String(), time.Now().Sub(t))
+		next(c)
+		log.Printf("[%s] %q %v\n", c.Request.Method, c.Request.URL.String(), time.Now().Sub(t))
 	}
 }
 
 func recoverHandler(next HandlerFunc) HandlerFunc {
-	return func(a *App) {
+	return func(c *Context) {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Printf("panic: %+v", err)
-				http.Error(a.ResponseWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				http.Error(c.ResponseWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		}()
-		next(a)
+		next(c)
 	}
 }
 
@@ -40,12 +40,12 @@ func staticHandler(next HandlerFunc) HandlerFunc {
 		dir       = http.Dir(".")
 		indexFile = "index.html"
 	)
-	return func(a *App) {
-		r := a.Request
-		w := a.ResponseWriter
+	return func(c *Context) {
+		r := c.Request
+		w := c.ResponseWriter
 
 		if r.Method != "GET" && r.Method != "HEAD" {
-			next(a)
+			next(c)
 			return
 		}
 
@@ -53,14 +53,14 @@ func staticHandler(next HandlerFunc) HandlerFunc {
 		f, err := dir.Open(file)
 		if err != nil {
 			// discard the error?
-			next(a)
+			next(c)
 			return
 		}
 		defer f.Close()
 
 		fi, err := f.Stat()
 		if err != nil {
-			next(a)
+			next(c)
 			return
 		}
 
@@ -75,14 +75,14 @@ func staticHandler(next HandlerFunc) HandlerFunc {
 			file = path.Join(file, indexFile)
 			f, err = dir.Open(file)
 			if err != nil {
-				next(a)
+				next(c)
 				return
 			}
 			defer f.Close()
 
 			fi, err = f.Stat()
 			if err != nil || fi.IsDir() {
-				next(a)
+				next(c)
 				return
 			}
 		}
@@ -91,26 +91,26 @@ func staticHandler(next HandlerFunc) HandlerFunc {
 }
 
 func parseJsonBodyHandler(next HandlerFunc) HandlerFunc {
-	return func(a *App) {
+	return func(c *Context) {
 		var m map[string]interface{}
-		if json.NewDecoder(a.Request.Body).Decode(&m); len(m) > 0 {
+		if json.NewDecoder(c.Request.Body).Decode(&m); len(m) > 0 {
 			for k, v := range m {
-				a.Params[k] = v
+				c.Params[k] = v
 			}
 		}
-		next(a)
+		next(c)
 	}
 }
 
 func parseFormHandler(next HandlerFunc) HandlerFunc {
-	return func(a *App) {
-		a.Request.ParseForm()
+	return func(c *Context) {
+		c.Request.ParseForm()
 
-		for k, v := range a.Request.PostForm {
+		for k, v := range c.Request.PostForm {
 			if len(v) > 0 {
-				a.Params[k] = v[0]
+				c.Params[k] = v[0]
 			}
 		}
-		next(a)
+		next(c)
 	}
 }

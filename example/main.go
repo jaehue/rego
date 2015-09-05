@@ -22,24 +22,24 @@ func main() {
 	s := rego.New()
 	s.HandleFunc("GET", "/", Index)
 	s.HandleFunc("GET", "/users", Users)
-	s.HandleFunc("GET", "/users/:id", func(a *rego.App) {
-		a.RenderJson(a.Params)
+	s.HandleFunc("GET", "/users/:id", func(c *rego.Context) {
+		c.RenderJson(c.Params)
 	})
 	s.HandleFunc("POST", "/users", PostUser)
 
-	s.HandleFunc("GET", "/login", func(a *rego.App) {
-		a.RenderTemplate("/public/login.html")
+	s.HandleFunc("GET", "/login", func(c *rego.Context) {
+		c.RenderTemplate("/public/login.html")
 	})
-	s.HandleFunc("POST", "/login", func(a *rego.App) {
-		if a.Params["username"] == "test" && a.Params["password"] == "password" {
-			http.SetCookie(a.ResponseWriter, &http.Cookie{
+	s.HandleFunc("POST", "/login", func(c *rego.Context) {
+		if c.Params["username"] == "test" && c.Params["password"] == "password" {
+			http.SetCookie(c.ResponseWriter, &http.Cookie{
 				Name:  "X_AUTH",
 				Value: Sign("verified"),
 				Path:  "/",
 			})
-			a.Redirect("/public/index.html")
+			c.Redirect("/public/index.html")
 		}
-		a.RenderTemplate("/public/login.html")
+		c.RenderTemplate("/public/login.html")
 
 	})
 
@@ -48,44 +48,44 @@ func main() {
 	s.Run(":8082")
 }
 
-func Index(a *rego.App) {
-	a.RenderJson("Welcome rego")
+func Index(c *rego.Context) {
+	c.RenderJson("Welcome rego")
 }
 
-func PostUser(a *rego.App) {
-	if u, ok := a.Params["user"]; ok {
+func PostUser(c *rego.Context) {
+	if u, ok := c.Params["user"]; ok {
 		log.Println(u)
 	}
 }
 
-func Users(a *rego.App) {
+func Users(c *rego.Context) {
 	users := []User{User{1, "John", "john@mail.com"}, User{2, "Bob", "bob@mail.com"}, User{3, "Mark", "mark@mail.com"}}
-	a.RenderJson(users)
+	c.RenderJson(users)
 }
 
 func AuthHandler(next rego.HandlerFunc) rego.HandlerFunc {
 	ignore := []string{"/login"}
-	return func(a *rego.App) {
+	return func(c *rego.Context) {
 		for _, s := range ignore {
-			if strings.HasPrefix(a.Request.URL.Path, s) {
-				next(a)
+			if strings.HasPrefix(c.Request.URL.Path, s) {
+				next(c)
 				return
 			}
 		}
 
-		if v, err := a.Cookie("X_AUTH"); err == http.ErrNoCookie {
+		if v, err := c.Cookie("X_AUTH"); err == http.ErrNoCookie {
 			// not authenticated
-			a.Redirect("/login")
+			c.Redirect("/login")
 			return
 		} else if err != nil {
-			a.RenderErr(http.StatusInternalServerError, err)
+			c.RenderErr(http.StatusInternalServerError, err)
 			return
 		} else if Verify("verified", v.Value) {
 			// success
-			next(a)
+			next(c)
 			return
 		}
-		a.Redirect("/login")
+		c.Redirect("/login")
 	}
 }
 

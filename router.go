@@ -28,28 +28,28 @@ func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 }
 
 func (r *router) handler() HandlerFunc {
-	return func(a *App) {
+	return func(c *Context) {
 		// 요청 Method에 해당하는 HandlerFunc를 호출
-		dispatcher, ok := r.dispatchers[a.Request.Method]
-		if ok && dispatcher.dispatch(a) {
+		dispatcher, ok := r.dispatchers[c.Request.Method]
+		if ok && dispatcher.dispatch(c) {
 			return
 		}
 
-		http.NotFound(a.ResponseWriter, a.Request)
+		http.NotFound(c.ResponseWriter, c.Request)
 	}
 }
 
-func (d *dispatcher) dispatch(a *App) bool {
-	fn, params, found := d.lookup(a.Request.URL.Path)
+func (d *dispatcher) dispatch(c *Context) bool {
+	fn, params, found := d.lookup(c.Request.URL.Path)
 	if !found {
 		return false
 	}
 
 	for k, v := range params {
-		a.Params[k] = v
+		c.Params[k] = v
 	}
 
-	fn(a)
+	fn(c)
 	return true
 }
 

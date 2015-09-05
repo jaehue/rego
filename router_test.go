@@ -13,12 +13,12 @@ func TestRouter(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
-		r.HandleFunc("GET", "/users", func(a *App) { ok = true })
+		r.HandleFunc("GET", "/users", func(c *Context) { ok = true })
 
 		req, _ := http.NewRequest("GET", "/users", nil)
-		a := &App{ResponseWriter: &mockResponseWriter{}, Request: req}
+		c := &Context{ResponseWriter: &mockResponseWriter{}, Request: req}
 
-		r.handler()(a)
+		r.handler()(c)
 
 		So(ok, ShouldBeTrue)
 
@@ -28,12 +28,12 @@ func TestRouter(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
-		r.HandleFunc("POST", "/users", func(a *App) { ok = true })
+		r.HandleFunc("POST", "/users", func(c *Context) { ok = true })
 
 		req, _ := http.NewRequest("POST", "/users", nil)
-		a := &App{ResponseWriter: &mockResponseWriter{}, Request: req}
+		c := &Context{ResponseWriter: &mockResponseWriter{}, Request: req}
 
-		r.handler()(a)
+		r.handler()(c)
 
 		So(ok, ShouldBeTrue)
 	})
@@ -42,32 +42,32 @@ func TestRouter(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 
 		ok := false
-		r.HandleFunc("GET", "/users/:id/addresses", func(a *App) {
-			if a.Params["id"] == "1" {
+		r.HandleFunc("GET", "/users/:id/addresses", func(c *Context) {
+			if c.Params["id"] == "1" {
 				ok = true
 			}
 		})
 
 		Convey("found", func() {
 			req, _ := http.NewRequest("GET", "/users/1/addresses", nil)
-			a := &App{
+			c := &Context{
 				Params:         make(map[string]interface{}),
 				ResponseWriter: &mockResponseWriter{},
 				Request:        req,
 			}
-			r.handler()(a)
+			r.handler()(c)
 
 			So(ok, ShouldBeTrue)
 		})
 
 		Convey("not found", func() {
 			req, _ := http.NewRequest("GET", "/users/2/addresses", nil)
-			a := &App{
+			c := &Context{
 				Params:         make(map[string]interface{}),
 				ResponseWriter: &mockResponseWriter{},
 				Request:        req,
 			}
-			r.handler()(a)
+			r.handler()(c)
 
 			So(ok, ShouldBeFalse)
 		})

@@ -10,12 +10,12 @@ import (
 func TestRecover(t *testing.T) {
 	Convey("Get", t, func() {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
-		r.HandleFunc("GET", "/", func(a *App) { panic("panic!") })
+		r.HandleFunc("GET", "/", func(c *Context) { panic("panic!") })
 
 		handler := recoverHandler(r.handler())
 		req, _ := http.NewRequest("GET", "/", nil)
-		a := &App{ResponseWriter: &mockResponseWriter{}, Request: req}
+		c := &Context{ResponseWriter: &mockResponseWriter{}, Request: req}
 
-		So(func() { handler(a) }, ShouldNotPanic)
+		So(func() { handler(c) }, ShouldNotPanic)
 	})
 }

@@ -8,14 +8,14 @@ type Server struct {
 	handlerFunc HandlerFunc
 }
 
-type App struct {
+type Context struct {
 	Params map[string]interface{}
 
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
 }
 
-type HandlerFunc func(*App)
+type HandlerFunc func(*Context)
 
 func (s *Server) Use(middlewares ...Middleware) {
 	s.middlewares = append(s.middlewares, middlewares...)
@@ -34,12 +34,12 @@ func (s *Server) Run(addr string) {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: r}
+	c := &Context{Params: make(map[string]interface{}), ResponseWriter: w, Request: r}
 	for k, v := range r.URL.Query() {
-		a.Params[k] = v[0]
+		c.Params[k] = v[0]
 	}
 
-	s.handlerFunc(a)
+	s.handlerFunc(c)
 }
 
 func New() *Server {
