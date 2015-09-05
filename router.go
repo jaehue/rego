@@ -27,7 +27,7 @@ func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 	d.handles[pattern] = h
 }
 
-func (r *router) handle() HandlerFunc {
+func (r *router) handler() HandlerFunc {
 	return func(a *App) {
 		// 요청 Method에 해당하는 HandlerFunc를 호출
 		dispatcher, ok := r.dispatchers[a.Request.Method]

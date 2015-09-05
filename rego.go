@@ -22,26 +22,6 @@ type App struct {
 	Request        *http.Request
 }
 
-func NewApp(w http.ResponseWriter, req *http.Request, urlParams map[string]string) *App {
-	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
-
-	if urlParams != nil {
-		for k, v := range urlParams {
-			a.Params[k] = v
-		}
-	}
-
-	return a
-}
-
-func (a App) SetCookie(k, v string) {
-	http.SetCookie(a.ResponseWriter, &http.Cookie{
-		Name:  k,
-		Value: v,
-		Path:  "/",
-	})
-}
-
 type HandlerFunc func(*App)
 
 type templateLoader struct {
@@ -50,6 +30,14 @@ type templateLoader struct {
 }
 
 var loader = templateLoader{templates: make(map[string]*template.Template)}
+
+func (a *App) SetCookie(k, v string) {
+	http.SetCookie(a.ResponseWriter, &http.Cookie{
+		Name:  k,
+		Value: v,
+		Path:  "/",
+	})
+}
 
 func (a *App) RenderTemplate(path string) {
 	t, ok := loader.templates[path]
@@ -95,19 +83,12 @@ func (a *App) RenderErr(code int, err error) {
 	}
 }
 
-func New() *Server {
-	r := &router{dispatchers: make(map[string]*dispatcher)}
-	s := &Server{router: r}
-	s.middlewares = []Middleware{logHandler, recoverHandler, staticHandler, parseFormHandler, parseJsonBodyHandler}
-	return s
-}
-
 func (s *Server) Use(middlewares ...Middleware) {
 	s.middlewares = append(s.middlewares, middlewares...)
 }
 
 func (s *Server) Run(addr string) {
-	s.handlerFunc = s.router.handle()
+	s.handlerFunc = s.router.handler()
 
 	for i := len(s.middlewares) - 1; i >= 0; i-- {
 		s.handlerFunc = s.middlewares[i](s.handlerFunc)
@@ -120,5 +101,16 @@ func (s *Server) Run(addr string) {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: r}
+	for k, v := range r.URL.Query() {
+		a.Params[k] = v[0]
+	}
+
 	s.handlerFunc(a)
+}
+
+func New() *Server {
+	r := &router{dispatchers: make(map[string]*dispatcher)}
+	s := &Server{router: r}
+	s.middlewares = []Middleware{logHandler, recoverHandler, staticHandler, parseFormHandler, parseJsonBodyHandler}
+	return s
 }

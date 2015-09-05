@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -32,8 +31,6 @@ func main() {
 		a.RenderTemplate("/public/login.html")
 	})
 	s.HandleFunc("POST", "/login", func(a *rego.App) {
-		fmt.Println(a.Params["username"])
-		fmt.Println(a.Params["password"])
 		if a.Params["username"] == "test" && a.Params["password"] == "password" {
 			http.SetCookie(a.ResponseWriter, &http.Cookie{
 				Name:  "X_AUTH",
@@ -69,29 +66,26 @@ func Users(a *rego.App) {
 func AuthHandler(next rego.HandlerFunc) rego.HandlerFunc {
 	ignore := []string{"/login"}
 	return func(a *rego.App) {
-		r := a.Request
-		w := a.ResponseWriter
 		for _, s := range ignore {
-			if strings.HasPrefix(r.URL.Path, s) {
+			if strings.HasPrefix(a.Request.URL.Path, s) {
 				next(a)
 				return
 			}
 		}
 
-		if v, err := r.Cookie("X_AUTH"); err == http.ErrNoCookie {
+		if v, err := a.Request.Cookie("X_AUTH"); err == http.ErrNoCookie {
 			// not authenticated
-			w.Header().Set("Location", "/login")
-			w.WriteHeader(http.StatusTemporaryRedirect)
+			a.Redirect("/login")
+			return
 		} else if err != nil {
-			// some other error
-			panic(err.Error())
+			a.RenderErr(http.StatusInternalServerError, err)
+			return
 		} else if Verify("verified", v.Value) {
-			// success - call the next handler
+			// success
 			next(a)
 			return
 		}
-		w.Header().Set("Location", "/login")
-		w.WriteHeader(http.StatusTemporaryRedirect)
+		a.Redirect("/login")
 	}
 }
 

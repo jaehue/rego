@@ -12,9 +12,9 @@ func TestRecover(t *testing.T) {
 		r := &router{dispatchers: make(map[string]*dispatcher)}
 		r.HandleFunc("GET", "/", func(a *App) { panic("panic!") })
 
-		handler := recoverHandler(r.handle())
+		handler := recoverHandler(r.handler())
 		req, _ := http.NewRequest("GET", "/", nil)
-		a := &App{Params: make(map[string]interface{}), ResponseWriter: &mockResponseWriter{}, Request: req}
+		a := &App{ResponseWriter: &mockResponseWriter{}, Request: req}
 
 		So(func() { handler(a) }, ShouldNotPanic)
 	})
