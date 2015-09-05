@@ -12,6 +12,7 @@ import (
 type Server struct {
 	*router
 	middlewares []Middleware
+	handlerFunc HandlerFunc
 }
 
 type App struct {
@@ -23,11 +24,7 @@ type App struct {
 
 func NewApp(w http.ResponseWriter, req *http.Request, urlParams map[string]string) *App {
 	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: req}
-	if params, ok := ctx.GetAll(req); ok {
-		for k, v := range params {
-			a.Params[k] = v
-		}
-	}
+
 	if urlParams != nil {
 		for k, v := range urlParams {
 			a.Params[k] = v
@@ -110,13 +107,18 @@ func (s *Server) Use(middlewares ...Middleware) {
 }
 
 func (s *Server) Run(addr string) {
-	var final http.Handler = s.router
+	s.handlerFunc = s.router.handle()
 
 	for i := len(s.middlewares) - 1; i >= 0; i-- {
-		final = s.middlewares[i](final)
+		s.handlerFunc = s.middlewares[i](s.handlerFunc)
 	}
 
-	if err := http.ListenAndServe(addr, final); err != nil {
+	if err := http.ListenAndServe(addr, s); err != nil {
 		panic(err)
 	}
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	a := &App{Params: make(map[string]interface{}), ResponseWriter: w, Request: r}
+	s.handlerFunc(a)
 }

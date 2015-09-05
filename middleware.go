@@ -13,36 +13,39 @@ type middlewareChain struct {
 	middlewares []Middleware
 }
 
-type Middleware func(next http.Handler) http.Handler
+type Middleware func(next HandlerFunc) HandlerFunc
 
-func logHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func logHandler(next HandlerFunc) HandlerFunc {
+	return func(a *App) {
 		t := time.Now()
-		next.ServeHTTP(w, r)
-		log.Printf("[%s] %q %v\n", r.Method, r.URL.String(), time.Now().Sub(t))
-	})
+		next(a)
+		log.Printf("[%s] %q %v\n", a.Request.Method, a.Request.URL.String(), time.Now().Sub(t))
+	}
 }
 
-func recoverHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func recoverHandler(next HandlerFunc) HandlerFunc {
+	return func(a *App) {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Printf("panic: %+v", err)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				http.Error(a.ResponseWriter, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		}()
-		next.ServeHTTP(w, r)
-	})
+		next(a)
+	}
 }
 
-func staticHandler(next http.Handler) http.Handler {
+func staticHandler(next HandlerFunc) HandlerFunc {
 	var (
 		dir       = http.Dir(".")
 		indexFile = "index.html"
 	)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(a *App) {
+		r := a.Request
+		w := a.ResponseWriter
+
 		if r.Method != "GET" && r.Method != "HEAD" {
-			next.ServeHTTP(w, r)
+			next(a)
 			return
 		}
 
@@ -50,14 +53,14 @@ func staticHandler(next http.Handler) http.Handler {
 		f, err := dir.Open(file)
 		if err != nil {
 			// discard the error?
-			next.ServeHTTP(w, r)
+			next(a)
 			return
 		}
 		defer f.Close()
 
 		fi, err := f.Stat()
 		if err != nil {
-			next.ServeHTTP(w, r)
+			next(a)
 			return
 		}
 
@@ -72,42 +75,42 @@ func staticHandler(next http.Handler) http.Handler {
 			file = path.Join(file, indexFile)
 			f, err = dir.Open(file)
 			if err != nil {
-				next.ServeHTTP(w, r)
+				next(a)
 				return
 			}
 			defer f.Close()
 
 			fi, err = f.Stat()
 			if err != nil || fi.IsDir() {
-				next.ServeHTTP(w, r)
+				next(a)
 				return
 			}
 		}
 		http.ServeContent(w, r, file, fi.ModTime(), f)
-	})
+	}
 }
 
-func parseJsonBodyHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func parseJsonBodyHandler(next HandlerFunc) HandlerFunc {
+	return func(a *App) {
 		var m map[string]interface{}
-		if json.NewDecoder(r.Body).Decode(&m); len(m) > 0 {
+		if json.NewDecoder(a.Request.Body).Decode(&m); len(m) > 0 {
 			for k, v := range m {
-				ctx.Set(r, k, v)
+				a.Params[k] = v
 			}
 		}
-		next.ServeHTTP(w, r)
-	})
+		next(a)
+	}
 }
 
-func parseFormHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		for k, v := range r.PostForm {
+func parseFormHandler(next HandlerFunc) HandlerFunc {
+	return func(a *App) {
+		a.Request.ParseForm()
+
+		for k, v := range a.Request.PostForm {
 			if len(v) > 0 {
-				ctx.Set(r, k, v[0])
+				a.Params[k] = v[0]
 			}
 		}
-		next.ServeHTTP(w, r)
-
-	})
+		next(a)
+	}
 }

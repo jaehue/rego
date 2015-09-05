@@ -27,23 +27,27 @@ func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 	d.handles[pattern] = h
 }
 
-// 요청 Method에 해당하는 HandlerFunc를 호출
-func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	dispatcher, ok := r.dispatchers[req.Method]
-	if ok && dispatcher.dispatch(w, req) {
-		return
-	}
+func (r *router) handle() HandlerFunc {
+	return func(a *App) {
+		// 요청 Method에 해당하는 HandlerFunc를 호출
+		dispatcher, ok := r.dispatchers[a.Request.Method]
+		if ok && dispatcher.dispatch(a) {
+			return
+		}
 
-	http.NotFound(w, req)
+		http.NotFound(a.ResponseWriter, a.Request)
+	}
 }
 
-func (d *dispatcher) dispatch(w http.ResponseWriter, req *http.Request) bool {
-	fn, params, found := d.lookup(req.URL.Path)
+func (d *dispatcher) dispatch(a *App) bool {
+	fn, params, found := d.lookup(a.Request.URL.Path)
 	if !found {
 		return false
 	}
 
-	a := NewApp(w, req, params)
+	for k, v := range params {
+		a.Params[k] = v
+	}
 
 	fn(a)
 	return true

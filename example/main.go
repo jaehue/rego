@@ -66,12 +66,14 @@ func Users(a *rego.App) {
 	a.RenderJson(users)
 }
 
-func AuthHandler(next http.Handler) http.Handler {
+func AuthHandler(next rego.HandlerFunc) rego.HandlerFunc {
 	ignore := []string{"/login"}
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(a *rego.App) {
+		r := a.Request
+		w := a.ResponseWriter
 		for _, s := range ignore {
 			if strings.HasPrefix(r.URL.Path, s) {
-				next.ServeHTTP(w, r)
+				next(a)
 				return
 			}
 		}
@@ -85,12 +87,12 @@ func AuthHandler(next http.Handler) http.Handler {
 			panic(err.Error())
 		} else if Verify("verified", v.Value) {
 			// success - call the next handler
-			next.ServeHTTP(w, r)
+			next(a)
 			return
 		}
 		w.Header().Set("Location", "/login")
 		w.WriteHeader(http.StatusTemporaryRedirect)
-	})
+	}
 }
 
 func Sign(message string) string {
