@@ -73,7 +73,7 @@ func AuthHandler(next rego.HandlerFunc) rego.HandlerFunc {
 			}
 		}
 
-		if v, err := a.Request.Cookie("X_AUTH"); err == http.ErrNoCookie {
+		if v, err := a.Cookie("X_AUTH"); err == http.ErrNoCookie {
 			// not authenticated
 			a.Redirect("/login")
 			return

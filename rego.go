@@ -39,6 +39,10 @@ func (a *App) SetCookie(k, v string) {
 	})
 }
 
+func (a *App) Cookie(k string) (*http.Cookie, error) {
+	return a.Request.Cookie(k)
+}
+
 func (a *App) RenderTemplate(path string) {
 	t, ok := loader.templates[path]
 	if !ok {
