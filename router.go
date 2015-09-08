@@ -45,8 +45,10 @@ func (d *dispatcher) dispatch(c *Context) bool {
 		return false
 	}
 
-	for k, v := range params {
-		c.Params[k] = v
+	if params != nil {
+		for k, v := range params {
+			c.Params[k] = v
+		}
 	}
 
 	fn(c)
@@ -62,29 +64,26 @@ func (d *dispatcher) lookup(path string) (HandlerFunc, map[string]string, bool) 
 	return nil, nil, false
 }
 
-func match(pattern, path string) (matched bool, params map[string]string) {
+func match(pattern, path string) (bool, map[string]string) {
 	if pattern == path {
-		return true, map[string]string{}
+		return true, nil
 	}
 	patterns := strings.Split(pattern, "/")
 	paths := strings.Split(path, "/")
 
 	if len(patterns) != len(paths) {
-		return
+		return false, nil
 	}
-	params = make(map[string]string)
+	params := make(map[string]string)
 	for i := 0; i < len(patterns); i++ {
 		switch {
 		case len(patterns[i]) == 0:
 		case patterns[i] == paths[i]:
-			matched = true
 		case patterns[i][0] == ':':
 			params[patterns[i][1:]] = paths[i]
-			matched = true
 		default:
-			matched = false
-			break
+			return false, nil
 		}
 	}
-	return
+	return true, params
 }
