@@ -9,7 +9,7 @@ import (
 
 func TestRecover(t *testing.T) {
 	Convey("Get", t, func() {
-		r := &router{dispatchers: make(map[string]*dispatcher)}
+		r := &router{make(map[string]map[string]HandlerFunc)}
 		r.HandleFunc("GET", "/", func(c *Context) { panic("panic!") })
 
 		handler := recoverHandler(r.handler())

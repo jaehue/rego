@@ -43,7 +43,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func New() *Server {
-	r := &router{dispatchers: make(map[string]*dispatcher)}
+	r := &router{make(map[string]map[string]HandlerFunc)}
 	s := &Server{router: r}
 	s.middlewares = []Middleware{logHandler, recoverHandler, staticHandler, parseFormHandler, parseJsonBodyHandler}
 	return s

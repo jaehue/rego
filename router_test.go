@@ -10,7 +10,7 @@ import (
 func TestRouter(t *testing.T) {
 
 	Convey("Get", t, func() {
-		r := &router{dispatchers: make(map[string]*dispatcher)}
+		r := &router{make(map[string]map[string]HandlerFunc)}
 
 		ok := false
 		r.HandleFunc("GET", "/users", func(c *Context) { ok = true })
@@ -25,7 +25,7 @@ func TestRouter(t *testing.T) {
 	})
 
 	Convey("Post", t, func() {
-		r := &router{dispatchers: make(map[string]*dispatcher)}
+		r := &router{make(map[string]map[string]HandlerFunc)}
 
 		ok := false
 		r.HandleFunc("POST", "/users", func(c *Context) { ok = true })
@@ -39,7 +39,7 @@ func TestRouter(t *testing.T) {
 	})
 
 	Convey("Lookup", t, func() {
-		r := &router{dispatchers: make(map[string]*dispatcher)}
+		r := &router{make(map[string]map[string]HandlerFunc)}
 
 		ok := false
 		r.HandleFunc("GET", "/users/:id/addresses", func(c *Context) {
