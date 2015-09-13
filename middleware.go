@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-type middlewareChain struct {
-	middlewares []Middleware
-}
-
 type Middleware func(next HandlerFunc) HandlerFunc
 
 func logHandler(next HandlerFunc) HandlerFunc {
