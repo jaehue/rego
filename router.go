@@ -54,9 +54,8 @@ func match(pattern, path string) (bool, map[string]string) {
 	params := make(map[string]string)
 	for i := 0; i < len(patterns); i++ {
 		switch {
-		case len(patterns[i]) == 0:
 		case patterns[i] == paths[i]:
-		case patterns[i][0] == ':':
+		case len(patterns[i]) > 0 && patterns[i][0] == ':':
 			params[patterns[i][1:]] = paths[i]
 		default:
 			return false, nil
